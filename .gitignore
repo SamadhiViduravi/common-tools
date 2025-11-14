@@ -19,6 +19,28 @@
 *.tar.gz
 *.rar
 
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+.vscode
+.classpath
+.project
+.settings
+
+# Ballerina
+target
+Config.toml
+config.env
+config.js
+
+# Git-Secret
+.gitsecret/keys/random_seed
+!*.secret
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
