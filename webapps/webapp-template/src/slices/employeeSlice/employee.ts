@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { State } from "../../types/types";
+import { State } from "@/types/types";
 import { AppConfig } from "@config/config";
 import axios, { HttpStatusCode } from "axios";
 import { APIService } from "@utils/apiService";

@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import { RouteDetail } from "@root/src/types/types";
 import { ChevronDown as ChevronDownIcon } from "lucide-react";
 import { ChevronUp as ChevronUpIcon } from "lucide-react";

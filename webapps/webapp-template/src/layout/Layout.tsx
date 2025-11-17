@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import Header from "@layout/header";
 import Sidebar from "@layout/sidebar";
 import { Box, useTheme } from "@mui/material";

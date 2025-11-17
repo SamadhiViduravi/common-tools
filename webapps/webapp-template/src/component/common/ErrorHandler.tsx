@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import { Box, Container } from "@mui/material";
 
 import Wso2Logo from "@assets/images/wso2-logo.svg";
