@@ -38,7 +38,7 @@ const TabOnePanel = () => {
 
   useEffect(() => {
     dispatch(fetchCollections());
-  }, []);
+  }, [dispatch]);
 
   const toggleClose = () => {
     setShowAddCollectionPopUp(false);
