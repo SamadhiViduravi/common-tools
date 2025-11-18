@@ -36,9 +36,7 @@ export const store = configureStore({
     appConfig: appConfigReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      thunk: undefined,
-    }),
+    getDefaultMiddleware(),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
