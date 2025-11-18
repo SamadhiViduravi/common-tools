@@ -49,6 +49,6 @@ export const AppConfig = {
     userInfo: ServiceBaseUrl + "/user-info",
     employees: ServiceBaseUrl + "/employees",
     appConfig: ServiceBaseUrl + "/app-config",
-    collections: ServiceBaseUrl + "collections"
+    collections: ServiceBaseUrl + "/collections"
   },
 };
