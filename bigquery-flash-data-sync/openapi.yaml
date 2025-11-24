@@ -1,0 +1,238 @@
+openapi: 3.1.0
+info:
+  title: BigQuery Flash Data Sync
+  description: |
+    A Go CLI application that synchronizes MySQL databases to Google Cloud BigQuery with automatic schema inference and concurrent processing.
+    
+    **Architecture**: Command-line batch job
+    
+    **Features**:
+    - Automatic schema detection and BigQuery table creation
+    - Concurrent extraction from multiple MySQL tables
+    - Dynamic type mapping (MySQL → BigQuery)
+    - Data sanitization (handles NULL, special characters, invalid UTF-8)
+    - BigQuery loading with WRITE_TRUNCATE mode
+    - Configurable connection pooling and timeouts
+    - Structured logging with Zap
+    
+    **Authentication**:
+    - MySQL: TLS with username/password
+    - BigQuery: Google Cloud Application Default Credentials (ADC)
+    
+    **Data Sources**:
+    - Finance Database
+    - Salesforce Database
+    
+    **Target**: BigQuery dataset
+  version: 1.0.0
+  contact:
+    name: WSO2 LLC - Internal Apps Team
+    url: https://www.wso2.com
+  license:
+    name: Proprietary
+    url: https://www.wso2.com
+
+externalDocs:
+  description: Project README
+  url: https://github.com/wso2-enterprise/digiops-finance/tree/main/operations/bigquery-flash-data-sync
+
+tags:
+  - name: cli
+    description: Command-line interface operations
+  - name: configuration
+    description: Environment variables and configuration
+
+paths: {}
+
+components:
+  schemas:
+    Configuration:
+      type: object
+      description: Environment variables required to run the application
+      required:
+        - GCP_PROJECT_ID
+        - BQ_DATASET_ID
+        - DB_HOST
+        - FINANCE_DB_NAME
+        - FINANCE_DB_USER
+        - FINANCE_DB_PASSWORD
+        - SALESFORCE_DB_NAME
+        - SALESFORCE_DB_USER
+        - SALESFORCE_DB_PASSWORD
+      properties:
+        GCP_PROJECT_ID:
+          type: string
+          description: Google Cloud Project ID hosting BigQuery
+          example: "your-gcp-project-id"
+        BQ_DATASET_ID:
+          type: string
+          description: BigQuery dataset where tables will be created/updated
+          example: "your_dataset_name"
+        DB_HOST:
+          type: string
+          description: MySQL database server host with port
+          example: "db.example.com:3306"
+        FINANCE_DB_NAME:
+          type: string
+          description: Finance database name
+          example: "finance_db"
+        FINANCE_DB_USER:
+          type: string
+          description: Finance database username
+          example: "finance_user"
+        FINANCE_DB_PASSWORD:
+          type: string
+          description: Finance database password
+          format: password
+          example: "your_password_here"
+        SALESFORCE_DB_NAME:
+          type: string
+          description: Salesforce database name
+          example: "salesforce_db"
+        SALESFORCE_DB_USER:
+          type: string
+          description: Salesforce database username
+          example: "salesforce_user"
+        SALESFORCE_DB_PASSWORD:
+          type: string
+          description: Salesforce database password
+          format: password
+          example: "your_password_here"
+        DB_MAX_OPEN_CONNECTIONS:
+          type: integer
+          description: Maximum number of concurrent database connections
+          default: 10
+          example: 15
+        DB_MAX_IDLE_CONNECTIONS:
+          type: integer
+          description: Maximum number of idle connections to keep available
+          default: 10
+          example: 5
+        DB_CONN_MAX_LIFETIME:
+          type: string
+          description: Maximum lifetime of a database connection (Go duration format)
+          default: "1m"
+          example: "1m"
+        SYNC_TIMEOUT:
+          type: string
+          description: Maximum duration for a single sync run (Go duration format)
+          default: "10m"
+          example: "5m"
+        DATE_FORMAT:
+          type: string
+          description: Go time layout for formatting date/time values (2006-01-02 for YYYY-MM-DD)
+          default: "2006-01-02T15:04:05Z07:00"
+          example: "2006-01-02"
+        LOG_ENV:
+          type: string
+          enum:
+            - dev
+            - prod
+          description: Logging environment (dev for development, prod for production)
+          default: "prod"
+          example: "dev"
+        LOG_LEVEL:
+          type: string
+          enum:
+            - debug
+            - info
+            - warn
+            - error
+            - dpanic
+            - panic
+            - fatal
+          description: Minimum log level to output
+          default: "info"
+          example: "info"
+
+    SyncedTables:
+      type: object
+      description: Tables synchronized by the application
+      properties:
+        finance:
+          type: array
+          description: Tables from Finance database
+          items:
+            type: string
+          example:
+            - "financial_table_1"
+            - "financial_table_2"
+            - "financial_table_3"
+        salesforce:
+          type: array
+          description: Tables from Salesforce database
+          items:
+            type: string
+          example:
+            - "salesforce_table_1"
+            - "salesforce_table_2"
+
+    ExecutionResult:
+      type: object
+      description: Result of a sync execution (from logs)
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: When the sync started
+          example: "2025-11-21T10:45:00Z"
+        status:
+          type: string
+          enum:
+            - success
+            - failed
+          description: Overall execution status
+          example: "success"
+        duration_seconds:
+          type: integer
+          description: Total execution time in seconds
+          example: 87
+        tables_processed:
+          type: integer
+          description: Number of tables successfully synced
+          example: 5
+        tables_failed:
+          type: integer
+          description: Number of tables that failed to sync
+          example: 0
+        error:
+          type: string
+          description: Error message if sync failed
+          nullable: true
+          example: null
+
+x-cli-usage: |
+  # Installation
+  go build -o bin/datasync cmd/datasync/main.go
+  
+  # Configuration
+  cp .env.example .env
+  # Edit .env with your credentials
+  
+  # Authentication
+  gcloud auth application-default login
+  gcloud config set project YOUR_PROJECT_ID
+  
+  # Execution
+  ./bin/datasync
+  
+  # With environment overrides
+  LOG_ENV=dev LOG_LEVEL=debug ./bin/datasync
+
+x-troubleshooting:
+  connection-timeout: |
+    Error: "dial tcp: i/o timeout"
+    Solution: Verify DB_HOST includes port, check firewall rules
+  
+  access-denied: |
+    Error: "Access denied for user"
+    Solution: Verify database credentials, check user permissions
+  
+  bigquery-permission-denied: |
+    Error: "Permission denied" (BigQuery)
+    Solution: Add bigquery.dataEditor and bigquery.jobUser roles to service account
+  
+  invalid-utf8: |
+    Error: "JSON table encountered errors"
+    Solution: Enable debug logging (LOG_LEVEL=debug) to identify problematic rows
+    
