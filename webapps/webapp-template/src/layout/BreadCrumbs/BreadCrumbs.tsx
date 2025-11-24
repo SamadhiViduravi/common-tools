@@ -53,7 +53,7 @@ export default function BasicBreadcrumbs() {
             const label =
               !isLast && isLong ? (
                 <Typography
-                  key={`${path}-full`}
+                  key={`${path}-short`}
                   variant="caption"
                   sx={{ color: theme.palette.customText.primary.p3.active }}
                 >
