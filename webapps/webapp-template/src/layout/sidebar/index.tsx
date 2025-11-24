@@ -66,6 +66,7 @@ const Sidebar = (props: SidebarProps) => {
     const button = (
       <Box
         component="button"
+        type="button"
         onClick={onClick}
         disabled={!onClick}
         aria-label={tooltipTitle}
