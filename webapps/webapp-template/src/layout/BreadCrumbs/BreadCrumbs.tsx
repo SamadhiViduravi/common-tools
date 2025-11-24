@@ -74,10 +74,8 @@ export default function BasicBreadcrumbs() {
                 <Box
                   component={Link}
                   to={routeTo}
-                  key={index}
                   sx={{
                     textDecoration: "none",
-                    color: theme.palette.customText.primary.p3.active,
                     padding: theme.spacing(0.5),
                     borderRadius: "4px",
                     transition: "all 0.2s",
@@ -98,7 +96,6 @@ export default function BasicBreadcrumbs() {
                 key={index}
                 sx={{
                   textDecoration: "none",
-                  color: theme.palette.customText.primary.p3.active,
                   padding: theme.spacing(0.5),
                   borderRadius: "4px",
                   transition: "all 0.2s",

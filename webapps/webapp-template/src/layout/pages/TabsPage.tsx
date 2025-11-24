@@ -109,6 +109,8 @@ export function Tabs({ tabs, activeIndex, handleTabClick }: TabToggleProps) {
           position: "relative",
           transition: "color 200ms",
         }}
+        role="tablist"
+        aria-orientation="horizontal"
       >
         {tabs.map((tab, index) => (
           <Button
@@ -116,6 +118,11 @@ export function Tabs({ tabs, activeIndex, handleTabClick }: TabToggleProps) {
             key={index}
             onClick={() => handleTabClick(index)}
             disableRipple
+            role="tab"
+            id={`simple-tab-${index}`}
+            aria-selected={activeIndex === index}
+            aria-controls={`simple-tabpanel-${index}`}
+            tabIndex={activeIndex === index ? 0 : -1}
             sx={{
               display: "flex",
               alignItems: "center",
