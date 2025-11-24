@@ -151,24 +151,6 @@ export function Tabs({ tabs, activeIndex, handleTabClick }: TabToggleProps) {
             </Box>
             <Box component="span">{tab.tabTitle}</Box>
 
-            {/* Animated underline */}
-            {activeIndex === index && (
-              <Box
-                component={motion.div}
-                sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: "0.125rem",
-                  bgcolor: "st-text-100",
-                }}
-                layoutId="activeTab"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              />
-            )}
           </Button>
         ))}
       </Box>
