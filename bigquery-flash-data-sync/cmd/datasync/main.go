@@ -25,6 +25,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 
 	"github.com/wso2-enterprise/digiops-finance/bigquery-flash-data-sync/internal/config"
 	"github.com/wso2-enterprise/digiops-finance/bigquery-flash-data-sync/internal/logger"

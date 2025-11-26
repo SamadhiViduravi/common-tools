@@ -36,7 +36,7 @@ info:
 
 externalDocs:
   description: Project README
-  url: https://github.com/wso2-enterprise/digiops-finance/tree/main/operations/bigquery-flash-data-sync
+  url: https://github.com/wso2-open-operations/common-tools/tree/main/bigquery-flash-data-sync
 
 tags:
   - name: cli
