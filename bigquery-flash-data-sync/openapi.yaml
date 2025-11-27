@@ -3,9 +3,9 @@ info:
   title: BigQuery Flash Data Sync
   description: |
     A Go CLI application that synchronizes SQL databases (MySQL, PostgreSQL) to Google Cloud BigQuery with automatic schema inference and concurrent processing.
-    
+
     **Architecture**: Command-line batch job
-    
+
     **Features**:
     - Automatic schema detection and BigQuery table creation
     - Concurrent extraction from multiple database tables
@@ -15,24 +15,24 @@ info:
     - BigQuery loading with WRITE_TRUNCATE mode
     - Configurable connection pooling and timeouts
     - Structured logging with Zap
-    
+
     **Authentication**:
     - MySQL/PostgreSQL: TLS with username/password
     - BigQuery: Google Cloud Application Default Credentials (ADC)
-    
+
     **Data Sources**:
     - Any MySQL database
     - Any PostgreSQL database
     - Dynamically configured via SYNC_DATABASES environment variable
-    
+
     **Target**: BigQuery dataset
   version: 2.0.0
   contact:
     name: WSO2 LLC - Internal Apps Team
     url: https://www.wso2.com
   license:
-    name: Proprietary
-    url: https://www.wso2.com
+    name: Apache 2.0
++   url: https://www.apache.org/licenses/LICENSE-2.0
 
 externalDocs:
   description: Project README
@@ -294,12 +294,23 @@ components:
               type: array
               items:
                 type: string
-              example: ["VARCHAR", "CHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET"]
+              example:
+                [
+                  "VARCHAR",
+                  "CHAR",
+                  "TEXT",
+                  "TINYTEXT",
+                  "MEDIUMTEXT",
+                  "LONGTEXT",
+                  "ENUM",
+                  "SET",
+                ]
             INTEGER:
               type: array
               items:
                 type: string
-              example: ["INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT", "INTEGER"]
+              example:
+                ["INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT", "INTEGER"]
             FLOAT:
               type: array
               items:
@@ -329,7 +340,15 @@ components:
               type: array
               items:
                 type: string
-              example: ["BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY"]
+              example:
+                [
+                  "BLOB",
+                  "TINYBLOB",
+                  "MEDIUMBLOB",
+                  "LONGBLOB",
+                  "BINARY",
+                  "VARBINARY",
+                ]
             JSON:
               type: array
               items:
@@ -343,17 +362,48 @@ components:
               type: array
               items:
                 type: string
-              example: ["VARCHAR", "CHAR", "TEXT", "NAME", "UUID", "CITEXT", "INET", "CIDR"]
+              example:
+                [
+                  "VARCHAR",
+                  "CHAR",
+                  "TEXT",
+                  "NAME",
+                  "UUID",
+                  "CITEXT",
+                  "INET",
+                  "CIDR",
+                ]
             INTEGER:
               type: array
               items:
                 type: string
-              example: ["INT", "INT2", "INT4", "INT8", "INTEGER", "SMALLINT", "BIGINT", "SERIAL", "BIGSERIAL"]
+              example:
+                [
+                  "INT",
+                  "INT2",
+                  "INT4",
+                  "INT8",
+                  "INTEGER",
+                  "SMALLINT",
+                  "BIGINT",
+                  "SERIAL",
+                  "BIGSERIAL",
+                ]
             FLOAT:
               type: array
               items:
                 type: string
-              example: ["FLOAT", "FLOAT4", "FLOAT8", "DOUBLE PRECISION", "DECIMAL", "NUMERIC", "REAL", "MONEY"]
+              example:
+                [
+                  "FLOAT",
+                  "FLOAT4",
+                  "FLOAT8",
+                  "DOUBLE PRECISION",
+                  "DECIMAL",
+                  "NUMERIC",
+                  "REAL",
+                  "MONEY",
+                ]
             DATE:
               type: array
               items:
@@ -388,34 +438,34 @@ components:
 x-cli-usage: |
   # Installation
   go build -o bin/datasync cmd/datasync/main.go
-  
+
   # Configuration
   cp .env.example .env
   # Edit .env with your credentials
-  
+
   # Authentication
   gcloud auth application-default login
   gcloud config set project YOUR_PROJECT_ID
-  
+
   # Execution
   ./bin/datasync
-  
+
   # Or run directly
   go run ./cmd/datasync
-  
+
   # With environment overrides
   LOG_ENV=dev LOG_LEVEL=debug go run ./cmd/datasync
-  
+
   # Dry run (test without writing to BigQuery)
   DRY_RUN=true go run ./cmd/datasync
 
 x-configuration-patterns: |
   # Database configuration pattern: {DATABASE_ID}_SETTING
   # Table configuration pattern: {DATABASE_ID}_{TABLE_NAME}_SETTING
-  
+
   # Example: Add a new database
   SYNC_DATABASES=finance,salesforce,inventory
-  
+
   INVENTORY_ENABLED=true
   INVENTORY_DB_TYPE=postgres
   INVENTORY_DB_HOST=inventory-db.example.com
@@ -424,7 +474,7 @@ x-configuration-patterns: |
   INVENTORY_DB_USER=reader
   INVENTORY_DB_PASSWORD=secret
   INVENTORY_TABLES=products,stock_levels
-  
+
   # Example: Custom table configuration
   INVENTORY_PRODUCTS_TARGET_TABLE=inv_products
   INVENTORY_PRODUCTS_PRIMARY_KEY=product_id
@@ -434,24 +484,23 @@ x-troubleshooting:
   table-not-found: |
     Error: "Table 'database.table' doesn't exist"
     Solution: Verify table names in {DB}_TABLES environment variable
-  
+
   connection-timeout: |
     Error: "dial tcp: i/o timeout"
     Solution: Verify DB_HOST and DB_PORT, check firewall rules
-  
+
   access-denied: |
     Error: "Access denied for user"
     Solution: Verify database credentials, check user permissions
-  
+
   bigquery-permission-denied: |
     Error: "Permission denied" (BigQuery)
     Solution: Add bigquery.dataEditor and bigquery.jobUser roles to service account
-  
+
   invalid-utf8: |
     Error: "JSON table encountered errors"
     Solution: Enable debug logging (LOG_LEVEL=debug) to identify problematic rows
-  
+
   context-deadline-exceeded: |
     Error: "context deadline exceeded"
     Solution: Increase SYNC_TIMEOUT value for large datasets
-
