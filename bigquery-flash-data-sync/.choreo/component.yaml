@@ -33,7 +33,7 @@ configMaps:
       - key: LOG_LEVEL
         value: info
       - key: SYNC_TIMEOUT
-        value: 10m
+        value: 15m
       - key: DATE_FORMAT
         value: 2006-01-02
       - key: DEFAULT_BATCH_SIZE
