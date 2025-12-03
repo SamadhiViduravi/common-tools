@@ -34,12 +34,12 @@ func InitLogger() {
 
 	var config zap.Config
 
-	if logEnv == "dev" {
-		config = zap.NewDevelopmentConfig()
-		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	if logEnv == "prod" {
+		config = zap.NewProductionConfig()
 		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	} else {
-		config = zap.NewProductionConfig()
+		config = zap.NewDevelopmentConfig()
+		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	}
 
@@ -91,3 +91,4 @@ func Sync() {
 		_ = Logger.Sync()
 	}
 }
+
