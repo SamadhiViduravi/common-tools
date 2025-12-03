@@ -84,6 +84,7 @@ func LoadConfig(logger *zap.Logger) (*model.Config, error) {
 			return nil, fmt.Errorf("failed to load config for database '%s': %w", dbName, err)
 		}
 		databases[dbName] = dbConfig
+
 		logger.Info("Loaded database configuration",
 			zap.String("database", dbName),
 			zap.Int("tables", len(dbConfig.Tables)),
@@ -98,9 +99,9 @@ func LoadConfig(logger *zap.Logger) (*model.Config, error) {
 	maxIdle := parseInt(logger, DBMaxIdleConns, "10", 10)
 	defaultBatchSize := parseInt(logger, DefaultBatchSizeKey, "1000", 1000)
 	maxRowParseFailures := parseInt(logger, MaxRowParseFailuresKey, "100", 100)
-
 	syncTimeout := parseDuration(logger, SyncTimeoutKey, "10m", 10*time.Minute)
 	connMaxLifetime := parseDuration(logger, DBConnMaxLifetime, "1m", 1*time.Minute)
+	dateFormat := getEnv(DateFormatKey, "2006-01-02T15:04:05Z07:00")
 
 	dryRun := parseBool(getEnv(DryRunKey, "false"))
 	createTables := parseBool(getEnv(CreateTablesKey, "true"))
@@ -111,7 +112,7 @@ func LoadConfig(logger *zap.Logger) (*model.Config, error) {
 		BigQueryDatasetID:   bqDatasetID,
 		Databases:           databases,
 		SyncTimeout:         syncTimeout,
-		DateFormat:          getEnv(DateFormatKey, "2006-01-02T15:04:05Z07:00"),
+		DateFormat:          dateFormat,
 		DefaultBatchSize:    defaultBatchSize,
 		MaxOpenConns:        maxOpen,
 		MaxIdleConns:        maxIdle,
