@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: BigQuery Flash Data Sync
   description: |
-    A Go CLI application that synchronizes SQL databases (MySQL, PostgreSQL) to Google Cloud BigQuery with automatic schema inference and concurrent processing.
+    A Go CLI application that synchronizes SQL databases to Google Cloud BigQuery with automatic schema inference and concurrent processing.
 
     **Architecture**: Command-line batch job
 
@@ -32,7 +32,7 @@ info:
     url: https://www.wso2.com
   license:
     name: Apache 2.0
-+   url: https://www.apache.org/licenses/LICENSE-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
 
 externalDocs:
   description: Project README

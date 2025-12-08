@@ -43,6 +43,7 @@ func validateBigQueryIdentifier(identifier string, identifierType string) error 
 	if identifier == "" {
 		return fmt.Errorf("%s cannot be empty", identifierType)
 	}
+	// 1024-character limit follows BigQuery's documented maximum identifier length
 	if len(identifier) > 1024 {
 		return fmt.Errorf("%s exceeds maximum length of 1024 characters", identifierType)
 	}
