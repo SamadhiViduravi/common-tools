@@ -94,8 +94,10 @@ func mysqlTypeToBigQueryType(mysqlType string, logger *zap.Logger) bigquery.Fiel
 		return bigquery.StringFieldType
 	case "INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT", "INTEGER":
 		return bigquery.IntegerFieldType
-	case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "REAL":
-		return bigquery.FloatFieldType
+	case "FLOAT", "DOUBLE", "REAL":
+ 		return bigquery.FloatFieldType
+	case "DECIMAL", "NUMERIC":
+		return bigquery.NumericFieldType
 	case "DATE":
 		return bigquery.DateFieldType
 	case "TIME":
@@ -126,8 +128,10 @@ func postgresTypeToBigQueryType(pgType string, logger *zap.Logger) bigquery.Fiel
 		return bigquery.StringFieldType
 	case "INT", "INT2", "INT4", "INT8", "INTEGER", "SMALLINT", "BIGINT", "SERIAL", "BIGSERIAL", "SMALLSERIAL":
 		return bigquery.IntegerFieldType
-	case "FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "DECIMAL", "NUMERIC", "REAL", "MONEY":
-		return bigquery.FloatFieldType
+	case "FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL":
+ 		return bigquery.FloatFieldType
+	case "DECIMAL", "NUMERIC", "MONEY":
+		return bigquery.NumericFieldType
 	case "DATE":
 		return bigquery.DateFieldType
 	case "TIME", "TIMETZ", "TIME WITH TIME ZONE", "TIME WITHOUT TIME ZONE":
