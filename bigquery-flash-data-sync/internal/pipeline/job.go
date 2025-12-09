@@ -458,7 +458,7 @@ func logSyncSummary(logger *zap.Logger, summary *model.SyncSummary) {
 				zap.Duration("duration", result.Duration),
 			)
 		} else {
-			logger.Info("Sync succeeded",
+			logger.Debug("Sync succeeded",
 				zap.String("database", result.DatabaseName),
 				zap.String("table", result.TableName),
 				zap.String("target", result.TargetTable),
