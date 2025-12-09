@@ -239,6 +239,10 @@ func InferSchemaFromPostgres(db *sql.DB, query string, logger *zap.Logger) (bigq
 // createOrUpdateTable ensures that a target table in BigQuery exists and that its schema matches the provided schema.
 // If the table does not exist, it is created. If the schema differs, the table schema is updated.
 func createOrUpdateTable(ctx context.Context, client *bigquery.Client, datasetID string, table model.BQTable, logger *zap.Logger) error {
+	if err := validateBigQueryIdentifier(table.Name, "Target table name"); err != nil {
+		return err
+	}
+	
 	logger.Info("Checking BigQuery table",
 		zap.String("dataset", datasetID),
 		zap.String("table", table.Name))
