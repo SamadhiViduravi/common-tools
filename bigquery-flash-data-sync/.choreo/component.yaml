@@ -8,7 +8,7 @@ displayName: BigQuery Flash Data Sync
 # Use "Service" for long-running processes or "Job" for batch execution
 componentType: Job
 description: |
-  A Go CLI application that synchronizes MySQL and Postgres databases to Google Cloud
+  A Go CLI application that synchronizes SQL databases to Google Cloud
   BigQuery with automatic schema inference and concurrent processing.
 
 build:
