@@ -67,7 +67,7 @@ func main() {
 
 	// Load .env file (optional in production)
 	if err := godotenv.Load(); err != nil {
-		logger.Logger.Debug("No .env file found, using environment variables")
+		logger.Logger.Info("No .env file found, using environment variables")
 	} else {
 		logger.Logger.Info(".env file loaded successfully")
 	}
