@@ -12,7 +12,7 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
-// under the License
+// under the License.
 
 // Package logger provides centralized logging configuration for the application.
 package logger
@@ -36,13 +36,12 @@ func InitLogger() {
 
 	if logEnv == "prod" {
 		config = zap.NewProductionConfig()
-		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	} else {
 		config = zap.NewDevelopmentConfig()
 		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	}
 
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.Level = zap.NewAtomicLevelAt(logLevel)
 
 	var err error
