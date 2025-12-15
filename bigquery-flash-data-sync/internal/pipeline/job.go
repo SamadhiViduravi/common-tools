@@ -184,14 +184,14 @@ func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Conf
 	)
 
 	db, err := openDatabaseConnection(ctx, dbConfig, cfg, logger)
-    if err != nil {
-        result.Error = fmt.Errorf("failed to open DB connection: %w", err)
-        result.CompletedAt = time.Now()
-        result.Duration = result.CompletedAt.Sub(result.StartedAt)
-        logger.Error("Database connection failed", zap.Error(err))
-        return result
-    }
-    defer db.Close()
+	if err != nil {
+		result.Error = fmt.Errorf("failed to open DB connection: %w", err)
+		result.CompletedAt = time.Now()
+		result.Duration = result.CompletedAt.Sub(result.StartedAt)
+		logger.Error("Database connection failed", zap.Error(err))
+		return result
+	}
+	defer db.Close()
 
 	inferredSchema, err := InferSchemaFromDatabase(db, dbConfig.Type, dbConfig.Name, dummyQuery, logger)
 	if err != nil {
@@ -335,42 +335,42 @@ func validateSQLIdentifier(id string) error {
 // openDatabaseConnection opens a connection to the source database with proper configuration.
 // It uses the map-based driver lookup for type safety and extensibility.
 func openDatabaseConnection(ctx context.Context, dbConfig *model.DatabaseConfig, cfg *model.Config, logger *zap.Logger) (*sql.DB, error) {
-    // Map lookup based on database type (case-insensitive)
-    driverName := getDBDriver(dbConfig.Type)
+	// Map lookup based on database type (case-insensitive)
+	driverName := getDBDriver(dbConfig.Type)
 
-    logger.Debug("Opening database connection",
-        zap.String("driver", driverName),
-        zap.String("host", dbConfig.Host),
-        zap.String("database", dbConfig.DatabaseName),
-        zap.String("database_type", dbConfig.Type),
-    )
+	logger.Debug("Opening database connection",
+		zap.String("driver", driverName),
+		zap.String("host", dbConfig.Host),
+		zap.String("database", dbConfig.DatabaseName),
+		zap.String("database_type", dbConfig.Type),
+	)
 
-    db, err := sql.Open(driverName, dbConfig.ConnectionString)
-    if err != nil {
-        return nil, fmt.Errorf("failed to open database connection: %w", err)
-    }
+	db, err := sql.Open(driverName, dbConfig.ConnectionString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
+	}
 
-    db.SetMaxOpenConns(cfg.MaxOpenConns)
-    db.SetMaxIdleConns(cfg.MaxIdleConns)
-    if cfg.ConnMaxLifetime > 0 {
-        db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
-    }
+	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.MaxIdleConns)
+	if cfg.ConnMaxLifetime > 0 {
+		db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	}
 
-    // Apply timeout to ping operation
-    pingCtx := ctx
-    if cfg.SyncTimeout > 0 {
-        var cancel context.CancelFunc
-        pingCtx, cancel = context.WithTimeout(ctx, cfg.SyncTimeout)
-        defer cancel()
-    }
+	// Apply timeout to ping operation
+	pingCtx := ctx
+	if cfg.SyncTimeout > 0 {
+		var cancel context.CancelFunc
+		pingCtx, cancel = context.WithTimeout(ctx, cfg.SyncTimeout)
+		defer cancel()
+	}
 
-    if err := db.PingContext(pingCtx); err != nil {
-        db.Close()
-        return nil, fmt.Errorf("failed to ping database: %w", err)
-    }
+	if err := db.PingContext(pingCtx); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
 
-    logger.Debug("Database connection established successfully")
-    return db, nil
+	logger.Debug("Database connection established successfully")
+	return db, nil
 }
 
 // executeJob runs a full extract-and-load process by querying the source database, buffering results in memory,
@@ -391,6 +391,9 @@ func executeJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Confi
 	defer rows.Close()
 
 	// In-Memory Buffer
+
+	// Batch size is already validated via tableConfig.GetBatchSize(cfg.DefaultBatchSize).
+	// No further fallback needed here to avoid redundant defaults and mask config errors.
 	maxRowsPerBatch := job.BatchSize
 	maxRowParseFailures := cfg.MaxRowParseFailures
 
@@ -479,7 +482,7 @@ func executeJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Confi
 	}
 
 	if totalRowsExtracted == 0 {
-		logger.Info("No rows to load.  Job finished.")
+		logger.Info("No rows to load. Job finished.")
 		return 0, nil
 	}
 	return totalRowsExtracted, nil
