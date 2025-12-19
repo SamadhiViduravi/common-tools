@@ -38,6 +38,8 @@ configMaps:
         value: 2006-01-02
       - key: DEFAULT_BATCH_SIZE
         value: "1000"
+
+      # Global DB defaults (applies to all DBs unless overridden per-db)
       - key: DB_TYPE
         value: mysql
       - key: DB_PORT
@@ -48,31 +50,27 @@ configMaps:
         value: "5"
       - key: DB_CONN_MAX_LIFETIME
         value: 1m
+
       - key: DRY_RUN
         value: "false"
       - key: AUTO_CREATE_TABLES
         value: "true"
       - key: TRUNCATE_ON_SYNC
         value: "false"
+
       # Databases to sync (comma-separated identifiers)
       - key: SYNC_DATABASES
         value: finance,salesforce
+
       # Finance database settings
       - key: FINANCE_ENABLED
         value: "true"
-      - key: FINANCE_DB_TYPE
-        value: mysql
-      - key: FINANCE_DB_PORT
-        value: "3306"
       - key: FINANCE_TABLES
         value: cache_financial_acc_cost_of_sales,cache_financial_acc_expense,cache_financial_acc_income
+
       # Salesforce database settings
       - key: SALESFORCE_ENABLED
         value: "true"
-      - key: SALESFORCE_DB_TYPE
-        value: mysql
-      - key: SALESFORCE_DB_PORT
-        value: "3306"
       - key: SALESFORCE_TABLES
         value: arr_sf_account,arr_sf_opportunity
 
@@ -82,19 +80,22 @@ secrets:
     data:
       - key: GCP_PROJECT_ID
       - key: BQ_DATASET_ID
+
+  # Optional global DB host secret (only needed if you use DB_HOST as a global default)
   - name: db-config
     data:
       - key: DB_HOST
+
   - name: finance-db-credentials
     data:
       - key: FINANCE_DB_HOST
       - key: FINANCE_DB_NAME
       - key: FINANCE_DB_USER
       - key: FINANCE_DB_PASSWORD
+
   - name: salesforce-db-credentials
     data:
       - key: SALESFORCE_DB_HOST
       - key: SALESFORCE_DB_NAME
       - key: SALESFORCE_DB_USER
       - key: SALESFORCE_DB_PASSWORD
-

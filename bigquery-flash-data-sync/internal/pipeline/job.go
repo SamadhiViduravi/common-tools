@@ -168,6 +168,8 @@ func Start(ctx context.Context, cfg *model.Config, logger *zap.Logger) error {
 // runTableJob handles the ETL process for a single table, including schema inference,
 // BigQuery table creation/update, data extraction, and load.
 func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Config, dbConfig *model.DatabaseConfig, tableConfig *model.TableConfig, logger *zap.Logger) *model.SyncResult {
+    startedAt := time.Now()
+
     rawTarget := tableConfig.GetTargetTableName()
     targetTableName, err := bigQueryTableID(rawTarget)
     if err != nil {
@@ -175,8 +177,8 @@ func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Conf
             DatabaseName: dbConfig.Name,
             TableName:    tableConfig.Name,
             TargetTable:  rawTarget,
-            StartedAt:    time.Now(),
-            CompletedAt:  time.Now(),
+            StartedAt:    startedAt,
+            CompletedAt:  startedAt,
             Duration:     0,
             Error:        fmt.Errorf("invalid BigQuery target table name %q: %w", rawTarget, err),
         }
@@ -186,18 +188,38 @@ func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Conf
         DatabaseName: dbConfig.Name,
         TableName:    tableConfig.Name,
         TargetTable:  targetTableName,
-        StartedAt:    time.Now(),
+        StartedAt:    startedAt,
+    }
+
+    finishErr := func(publicMsg string, err error) *model.SyncResult {
+        if err == nil {
+            err = fmt.Errorf(publicMsg)
+        } else if publicMsg != "" {
+            err = fmt.Errorf("%s: %w", publicMsg, err)
+        }
+        result.Error = err
+        result.CompletedAt = time.Now()
+        result.Duration = result.CompletedAt.Sub(result.StartedAt)
+
+        if publicMsg != "" {
+            logger.Error(publicMsg, zap.Error(err))
+        } else {
+            logger.Error("Table job failed", zap.Error(err))
+        }
+        return result
+    }
+
+    finishOK := func() *model.SyncResult {
+        result.CompletedAt = time.Now()
+        result.Duration = result.CompletedAt.Sub(result.StartedAt)
+        return result
     }
 
     logger.Info("Starting table sync job")
 
     sourceQuery, err := buildSourceQuery(dbConfig, tableConfig)
     if err != nil {
-        result.Error = fmt.Errorf("failed to build source query: %w", err)
-        result.CompletedAt = time.Now()
-        result.Duration = result.CompletedAt.Sub(result.StartedAt)
-        logger.Error("Failed to build source query", zap.Error(err))
-        return result
+        return finishErr("Failed to build source query", err)
     }
     dummyQuery := sourceQuery + " LIMIT 1"
 
@@ -207,21 +229,13 @@ func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Conf
 
     db, err := openDatabaseConnection(ctx, dbConfig, cfg, logger)
     if err != nil {
-        result.Error = fmt.Errorf("failed to open DB connection: %w", err)
-        result.CompletedAt = time.Now()
-        result.Duration = result.CompletedAt.Sub(result.StartedAt)
-        logger.Error("Database connection failed", zap.Error(err))
-        return result
+        return finishErr("Database connection failed", err)
     }
     defer db.Close()
 
     inferredSchema, err := InferSchemaFromDatabase(db, dbConfig.Type, dbConfig.Name, dummyQuery, logger)
     if err != nil {
-        result.Error = fmt.Errorf("failed to infer schema: %w", err)
-        result.CompletedAt = time.Now()
-        result.Duration = result.CompletedAt.Sub(result.StartedAt)
-        logger.Error("Schema inference failed", zap.Error(err))
-        return result
+        return finishErr("Schema inference failed", err)
     }
 
     logger.Info("Schema inferred successfully",
@@ -230,20 +244,14 @@ func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Conf
 
     if cfg.DryRun {
         logger.Info("Dry run mode - skipping BigQuery operations")
-        result.CompletedAt = time.Now()
-        result.Duration = result.CompletedAt.Sub(result.StartedAt)
-        return result
+        return finishOK()
     }
 
     bqTable := model.BQTable{Name: targetTableName, Schema: inferredSchema}
 
     if cfg.CreateTables {
         if err := createOrUpdateTable(ctx, bqClient, cfg.BigQueryDatasetID, bqTable, logger); err != nil {
-            result.Error = fmt.Errorf("failed to create/update BigQuery table: %w", err)
-            result.CompletedAt = time.Now()
-            result.Duration = result.CompletedAt.Sub(result.StartedAt)
-            logger.Error("BigQuery table creation failed", zap.Error(err))
-            return result
+            return finishErr("BigQuery table creation failed", err)
         }
     }
 
@@ -266,16 +274,11 @@ func runTableJob(ctx context.Context, bqClient *bigquery.Client, cfg *model.Conf
 
     rowsSynced, err := executeJob(ctx, bqClient, cfg, job, db, logger)
     if err != nil {
-        result.Error = fmt.Errorf("job execution failed: %w", err)
-        result.CompletedAt = time.Now()
-        result.Duration = result.CompletedAt.Sub(result.StartedAt)
-        logger.Error("Job execution failed", zap.Error(err))
-        return result
+        return finishErr("Job execution failed", err)
     }
 
     result.RowsSynced = rowsSynced
-    result.CompletedAt = time.Now()
-    result.Duration = result.CompletedAt.Sub(result.StartedAt)
+    finishOK()
 
     logger.Info("Table sync job completed successfully",
         zap.Int64("rows_synced", rowsSynced),

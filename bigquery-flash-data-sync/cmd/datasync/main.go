@@ -20,108 +20,103 @@
 package main
 
 import (
-	"context"
-	"os/user"
-	"time"
+    "context"
+    "os/user"
+    "time"
 
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
+    _ "github.com/go-sql-driver/mysql"
+    _ "github.com/lib/pq"
 
-	"github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/config"
-	"github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/logger"
-	"github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/model"
-	"github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/pipeline"
+    "github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/config"
+    "github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/logger"
+    "github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/model"
+    "github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/pipeline"
 
-	"github.com/joho/godotenv"
-	"go.uber.org/zap"
+    "github.com/joho/godotenv"
+    "go.uber.org/zap"
 )
 
-// Version information (set via ldflags during build)
 var (
-	Version   = "dev"
-	BuildTime = "unknown"
-	GitCommit = "unknown"
+    Version   = "dev"
+    BuildTime = "unknown"
+    GitCommit = "unknown"
 )
 
 // main initializes logging, configuration, and starts the sync pipeline.
 func main() {
-	// Initialize logger first
-	logger.InitLogger()
-	defer logger.Sync()
+    // Initialize logger first
+    logger.InitLogger()
+    defer logger.Sync()
 
-	// Get current OS user
-	currentUser, err := user.Current()
-	username := "unknown"
-	if err == nil {
-		username = currentUser.Username
-	}
+    // Get current OS user
+    currentUser, err := user.Current()
+    username := "unknown"
+    if err == nil {
+        username = currentUser.Username
+    }
 
-	// Log application startup with version info
-	logger.Logger.Info("Starting BigQuery Data Sync Tool",
-		zap.String("version", Version),
-		zap.String("build_time", BuildTime),
-		zap.String("git_commit", GitCommit),
-		zap.String("user", username),
-		zap.String("timestamp", time.Now().Format(time.RFC3339)),
-	)
+    // Log application startup with version info
+    logger.Logger.Info("Starting BigQuery Data Sync Tool",
+        zap.String("version", Version),
+        zap.String("build_time", BuildTime),
+        zap.String("git_commit", GitCommit),
+        zap.String("user", username),
+        zap.String("timestamp", time.Now().Format(time.RFC3339)),
+    )
 
-	// Load .env file (optional in production)
-	if err := godotenv.Load(); err != nil {
-		logger.Logger.Info("No .env file found, using environment variables")
-	} else {
-		logger.Logger.Info(".env file loaded successfully")
-	}
+    // Load .env file (optional in production)
+    if err := godotenv.Load(); err != nil {
+        logger.Logger.Info("No .env file found, using environment variables")
+    } else {
+        logger.Logger.Info(".env file loaded successfully")
+    }
 
-	// Load application configuration
-	logger.Logger.Info("Loading application configuration")
-	cfg, err := config.LoadConfig(logger.Logger)
-	if err != nil {
-		logger.Logger.Fatal("Failed to load configuration", zap.Error(err))
-	}
+    // Load application configuration
+    logger.Logger.Info("Loading application configuration")
+    cfg, err := config.LoadConfig(logger.Logger)
+    if err != nil {
+        logger.Logger.Fatal("Failed to load configuration", zap.Error(err))
+    }
 
-	// Log configuration summary
-	logConfigSummary(cfg)
+    // Log configuration summary
+    logConfigSummary(cfg)
 
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.SyncTimeout)
-	defer cancel()
+    // Create context with timeout
+    ctx, cancel := context.WithTimeout(context.Background(), cfg.SyncTimeout)
+    defer cancel()
 
-	// Run the sync pipeline
-	logger.Logger.Info("Starting data sync pipeline",
-		zap.Duration("timeout", cfg.SyncTimeout),
-		zap.Bool("dry_run", cfg.DryRun),
-	)
+    // Run the sync pipeline
+    logger.Logger.Info("Starting data sync pipeline",
+        zap.Duration("timeout", cfg.SyncTimeout),
+        zap.Bool("dry_run", cfg.DryRun),
+    )
 
-	if err := pipeline.Start(ctx, cfg, logger.Logger); err != nil {
-		logger.Logger.Fatal("Data sync pipeline failed", zap.Error(err))
-	}
+    if err := pipeline.Start(ctx, cfg, logger.Logger); err != nil {
+        logger.Logger.Fatal("Data sync pipeline failed", zap.Error(err))
+    }
 
-	logger.Logger.Info("Data sync completed successfully")
+    logger.Logger.Info("Data sync completed successfully")
 }
 
 // logConfigSummary logs a summary of the loaded configuration
 func logConfigSummary(cfg *model.Config) {
-	totalTables := 0
-	for dbName, dbConfig := range cfg.Databases {
-		enabledTables := 0
-		for _, tblConfig := range dbConfig.Tables {
-			if tblConfig.Enabled {
-				enabledTables++
-			}
-		}
-		totalTables += enabledTables
-		logger.Logger.Info("Database configured",
-			zap.String("name", dbName),
-			zap.String("type", dbConfig.Type),
-			zap.Bool("enabled", dbConfig.Enabled),
-			zap.Int("tables", enabledTables),
-		)
-	}
+    enabledDBs := cfg.GetEnabledDatabases()
+    totalEnabledTables := cfg.CountEnabledTables()
 
-	logger.Logger.Info("Configuration summary",
-		zap.String("gcp_project", cfg.GCPProjectID),
-		zap.String("bq_dataset", cfg.BigQueryDatasetID),
-		zap.Int("databases", len(cfg.Databases)),
-		zap.Int("total_tables", totalTables),
-	)
+    for _, db := range enabledDBs {
+        logger.Logger.Info("Database configured",
+            zap.String("name", db.Name),
+            zap.String("type", db.Type),
+            zap.Bool("enabled", db.Enabled),
+            zap.Int("tables", len(db.GetEnabledTables())),
+        )
+    }
+
+    logger.Logger.Info("Configuration summary",
+        zap.String("gcp_project", cfg.GCPProjectID),
+        zap.String("bq_dataset", cfg.BigQueryDatasetID),
+        zap.Int("databases_total", len(cfg.Databases)),
+        zap.Int("databases_enabled", len(enabledDBs)),
+        zap.Int("total_tables_enabled", totalEnabledTables),
+    )
 }

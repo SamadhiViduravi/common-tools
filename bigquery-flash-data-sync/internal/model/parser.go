@@ -18,41 +18,48 @@
 package model
 
 import (
-	"database/sql"
-	"fmt"
-	"strings"
-	"time"
-	"unicode/utf8"
+    "database/sql"
+    "fmt"
+    "strings"
+    "time"
+    "unicode/utf8"
 
-	"go.uber.org/zap"
+    "go.uber.org/zap"
 )
 
 // ParseDynamicRow scans a sql.Rows result into a DynamicRow structure.
 // It handles various SQL types and converts them appropriately for BigQuery.
 func ParseDynamicRow(rows *sql.Rows, logger *zap.Logger, dateFormat string) (*DynamicRow, error) {
-	columns, err := rows.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get columns: %w", err)
-	}
+    columns, err := rows.Columns()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get columns: %w", err)
+    }
 
-	values := make([]any, len(columns))
-	valuePtrs := make([]any, len(columns))
-	for i := range values {
-		valuePtrs[i] = &values[i]
-	}
+    values := make([]any, len(columns))
+    valuePtrs := make([]any, len(columns))
+    for i := range values {
+        valuePtrs[i] = &values[i]
+    }
 
-	if err := rows.Scan(valuePtrs...); err != nil {
-		return nil, fmt.Errorf("failed to scan row: %w", err)
-	}
+    if err := rows.Scan(valuePtrs...); err != nil {
+        return nil, fmt.Errorf("failed to scan row: %w", err)
+    }
 
-	for i, val := range values {
-		values[i] = convertValue(val, dateFormat, logger)
-	}
+    for i, val := range values {
+        values[i] = convertValue(val, dateFormat, logger)
+    }
 
-	return &DynamicRow{
-		ColumnNames: columns,
-		Values:      values,
-	}, nil
+    return &DynamicRow{
+        ColumnNames: columns,
+        Values:      values,
+    }, nil
+}
+
+func sanitizeInvalidUTF8(logger *zap.Logger, s string, originalLen int) string {
+    logger.Debug("Invalid UTF-8 detected, sanitizing",
+        zap.Int("original_length", originalLen),
+    )
+    return strings.ToValidUTF8(s, "")
 }
 
 // convertValue converts SQL values to appropriate Go types for BigQuery.
@@ -64,13 +71,10 @@ func convertValue(val any, dateFormat string, logger *zap.Logger) any {
 
     switch v := val.(type) {
     case []byte:
-        s := string(v)
         if !utf8.Valid(v) {
-            logger.Debug("Invalid UTF-8 sequence detected, sanitizing",
-                zap.Int("original_length", len(v)))
-            return strings.ToValidUTF8(s, "")
+            return sanitizeInvalidUTF8(logger, string(v), len(v))
         }
-        return s
+        return string(v)
 
     case time.Time:
         if v.IsZero() {
@@ -95,9 +99,7 @@ func convertValue(val any, dateFormat string, logger *zap.Logger) any {
         return v
     case string:
         if !utf8.ValidString(v) {
-            logger.Debug("Invalid UTF-8 string detected, sanitizing",
-                zap.Int("original_length", len(v)))
-            return strings.ToValidUTF8(v, "")
+            return sanitizeInvalidUTF8(logger, v, len(v))
         }
         return v
     default:

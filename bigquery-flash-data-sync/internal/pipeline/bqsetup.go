@@ -20,16 +20,16 @@
 package pipeline
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"regexp"
-	"strings"
+    "context"
+    "database/sql"
+    "fmt"
+    "regexp"
+    "strings"
 
-	"github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/model"
+    "github.com/wso2-open-operations/common-tools/bigquery-flash-data-sync/internal/model"
 
-	"cloud.google.com/go/bigquery"
-	"go.uber.org/zap"
+    "cloud.google.com/go/bigquery"
+    "go.uber.org/zap"
 )
 
 // validIdentifierRegex matches valid BigQuery identifiers.
@@ -40,17 +40,17 @@ var validIdentifierRegex = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`)
 // validateBigQueryIdentifier checks if an identifier is safe for use in BigQuery queries.
 // Returns an error if the identifier contains invalid characters that could enable SQL injection.
 func validateBigQueryIdentifier(identifier string, identifierType string) error {
-	if identifier == "" {
-		return fmt.Errorf("%s cannot be empty", identifierType)
-	}
-	// 1024-character limit follows BigQuery's documented maximum identifier length
-	if len(identifier) > 1024 {
-		return fmt.Errorf("%s exceeds maximum length of 1024 characters", identifierType)
-	}
-	if !validIdentifierRegex.MatchString(identifier) {
-		return fmt.Errorf("%s '%s' contains invalid characters; must match pattern [a-zA-Z_][a-zA-Z0-9_-]*", identifierType, identifier)
-	}
-	return nil
+    if identifier == "" {
+        return fmt.Errorf("%s cannot be empty", identifierType)
+    }
+    // 1024-character limit follows BigQuery's documented maximum identifier length
+    if len(identifier) > 1024 {
+        return fmt.Errorf("%s exceeds maximum length of 1024 characters", identifierType)
+    }
+    if !validIdentifierRegex.MatchString(identifier) {
+        return fmt.Errorf("%s '%s' contains invalid characters; must match pattern [a-zA-Z_][a-zA-Z0-9_-]*", identifierType, identifier)
+    }
+    return nil
 }
 
 // SchemaInferrer defines the function signature for database-specific schema inference.
@@ -59,200 +59,183 @@ type SchemaInferrer func(*sql.DB, string, string, *zap.Logger) (bigquery.Schema,
 // schemaInferrers is a registry mapping database types to their inference functions.
 // This allows for easy extension without modifying the main InferSchemaFromDatabase function.
 var schemaInferrers = map[string]SchemaInferrer{
-	"mysql":    InferSchemaFromMySQL,
-	"postgres": InferSchemaFromPostgres,
-	// Future: "mssql": InferSchemaFromMSSQL,
+    "mysql":    InferSchemaFromMySQL,
+    "postgres": InferSchemaFromPostgres,
+    // Future: "mssql": InferSchemaFromMSSQL,
 }
 
 // InferSchemaFromDatabase infers a BigQuery schema from a SQL database query.
 // It uses a map-based strategy to select the correct inference logic based on dbType.
 func InferSchemaFromDatabase(db *sql.DB, dbType string, dbName string, query string, logger *zap.Logger) (bigquery.Schema, error) {
-	logger.Debug("Inferring schema from database",
-		zap.String("db_type", dbType),
-		zap.String("database", dbName),
-		zap.String("query", query))
+    logger.Debug("Inferring schema from database",
+        zap.String("db_type", dbType),
+        zap.String("database", dbName),
+        zap.String("query", query))
 
-	key := strings.ToLower(dbType)
+    key := strings.ToLower(dbType)
 
-	inferrer, exists := schemaInferrers[key]
-	if !exists {
-		logger.Warn("Unknown database type, defaulting to MySQL schema inference",
-			zap.String("database_type", dbType),
-			zap.String("database", dbName))
-		inferrer = schemaInferrers["mysql"]
-	}
+    inferrer, exists := schemaInferrers[key]
+    if !exists {
+        logger.Warn("Unknown database type, defaulting to MySQL schema inference",
+            zap.String("database_type", dbType),
+            zap.String("database", dbName))
+        inferrer = schemaInferrers["mysql"]
+    }
 
-	return inferrer(db, dbName, query, logger)
+    return inferrer(db, dbName, query, logger)
 }
 
 // mysqlTypeToBigQueryType maps common MySQL database types to BigQuery types.
 func mysqlTypeToBigQueryType(mysqlType string, logger *zap.Logger) bigquery.FieldType {
-	t := strings.ToUpper(strings.Split(mysqlType, "(")[0])
-	switch t {
-	case "VARCHAR", "CHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET":
-		return bigquery.StringFieldType
-	case "INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT", "INTEGER":
-		return bigquery.IntegerFieldType
-	case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "REAL":
-		return bigquery.FloatFieldType
-	case "DATE":
-		return bigquery.DateFieldType
-	case "TIME":
-		return bigquery.TimeFieldType
-	case "DATETIME", "TIMESTAMP":
-		return bigquery.TimestampFieldType
-	case "BOOLEAN", "BOOL", "BIT":
-		return bigquery.BooleanFieldType
-	case "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY":
-		return bigquery.BytesFieldType
-	case "JSON":
-		return bigquery.JSONFieldType
-	default:
-		logger.Warn("Unknown MySQL type, defaulting to STRING",
-			zap.String("mysql_type", mysqlType),
-			zap.String("default_type", "STRING"))
-		return bigquery.StringFieldType
-	}
+    t := strings.ToUpper(strings.Split(mysqlType, "(")[0])
+    switch t {
+    case "VARCHAR", "CHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "ENUM", "SET":
+        return bigquery.StringFieldType
+    case "INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT", "INTEGER":
+        return bigquery.IntegerFieldType
+    case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "REAL":
+        return bigquery.FloatFieldType
+    case "DATE":
+        return bigquery.DateFieldType
+    case "TIME":
+        return bigquery.TimeFieldType
+    case "DATETIME", "TIMESTAMP":
+        return bigquery.TimestampFieldType
+    case "BOOLEAN", "BOOL", "BIT":
+        return bigquery.BooleanFieldType
+    case "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY":
+        return bigquery.BytesFieldType
+    case "JSON":
+        return bigquery.JSONFieldType
+    default:
+        logger.Warn("Unknown MySQL type, defaulting to STRING",
+            zap.String("mysql_type", mysqlType),
+            zap.String("default_type", "STRING"))
+        return bigquery.StringFieldType
+    }
 }
 
 // postgresTypeToBigQueryType maps common PostgreSQL database types to BigQuery types.
 func postgresTypeToBigQueryType(pgType string, logger *zap.Logger) bigquery.FieldType {
-	t := strings.ToUpper(strings.Split(pgType, "(")[0])
-	t = strings.TrimSuffix(t, "[]")
+    t := strings.ToUpper(strings.Split(pgType, "(")[0])
+    t = strings.TrimSuffix(t, "[]")
 
-	switch t {
-	case "VARCHAR", "CHAR", "CHARACTER", "CHARACTER VARYING", "TEXT", "NAME", "UUID", "CITEXT":
-		return bigquery.StringFieldType
-	case "INT", "INT2", "INT4", "INT8", "INTEGER", "SMALLINT", "BIGINT", "SERIAL", "BIGSERIAL", "SMALLSERIAL":
-		return bigquery.IntegerFieldType
-	case "FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "DECIMAL", "NUMERIC", "REAL", "MONEY":
-		return bigquery.FloatFieldType
-	case "DATE":
-		return bigquery.DateFieldType
-	case "TIME", "TIMETZ", "TIME WITH TIME ZONE", "TIME WITHOUT TIME ZONE":
-		return bigquery.TimeFieldType
-	case "TIMESTAMP", "TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITHOUT TIME ZONE":
-		return bigquery.TimestampFieldType
-	case "BOOLEAN", "BOOL":
-		return bigquery.BooleanFieldType
-	case "BYTEA":
-		return bigquery.BytesFieldType
-	case "JSON", "JSONB":
-		return bigquery.JSONFieldType
-	case "INET", "CIDR", "MACADDR", "MACADDR8":
-		return bigquery.StringFieldType
-	case "INTERVAL":
-		return bigquery.StringFieldType
-	case "POINT", "LINE", "LSEG", "BOX", "PATH", "POLYGON", "CIRCLE":
-		return bigquery.StringFieldType
-	default:
-		logger.Warn("Unknown PostgreSQL type, defaulting to STRING",
-			zap.String("postgres_type", pgType),
-			zap.String("default_type", "STRING"))
-		return bigquery.StringFieldType
-	}
+    switch t {
+    case "VARCHAR", "CHAR", "CHARACTER", "CHARACTER VARYING", "TEXT", "NAME", "UUID", "CITEXT":
+        return bigquery.StringFieldType
+    case "INT", "INT2", "INT4", "INT8", "INTEGER", "SMALLINT", "BIGINT", "SERIAL", "BIGSERIAL", "SMALLSERIAL":
+        return bigquery.IntegerFieldType
+    case "FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "DECIMAL", "NUMERIC", "REAL", "MONEY":
+        return bigquery.FloatFieldType
+    case "DATE":
+        return bigquery.DateFieldType
+    case "TIME", "TIMETZ", "TIME WITH TIME ZONE", "TIME WITHOUT TIME ZONE":
+        return bigquery.TimeFieldType
+    case "TIMESTAMP", "TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITHOUT TIME ZONE":
+        return bigquery.TimestampFieldType
+    case "BOOLEAN", "BOOL":
+        return bigquery.BooleanFieldType
+    case "BYTEA":
+        return bigquery.BytesFieldType
+    case "JSON", "JSONB":
+        return bigquery.JSONFieldType
+    case "INET", "CIDR", "MACADDR", "MACADDR8":
+        return bigquery.StringFieldType
+    case "INTERVAL":
+        return bigquery.StringFieldType
+    case "POINT", "LINE", "LSEG", "BOX", "PATH", "POLYGON", "CIRCLE":
+        return bigquery.StringFieldType
+    default:
+        logger.Warn("Unknown PostgreSQL type, defaulting to STRING",
+            zap.String("postgres_type", pgType),
+            zap.String("default_type", "STRING"))
+        return bigquery.StringFieldType
+    }
+}
+
+// inferSchema is shared logic for schema inference across DBs (reduces duplication).
+func inferSchema(db *sql.DB, dbName string, query string, logger *zap.Logger, typeMapper func(string, *zap.Logger) bigquery.FieldType) (bigquery.Schema, error) {
+    rows, err := db.Query(query)
+    if err != nil {
+        return nil, fmt.Errorf("schema inference query failed: %w", err)
+    }
+    defer rows.Close()
+
+    columnTypes, err := rows.ColumnTypes()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get column types for inference: %w", err)
+    }
+
+    logger.Debug("Retrieved column types for schema inference",
+        zap.String("database", dbName),
+        zap.Int("column_count", len(columnTypes)),
+    )
+
+    schema := make(bigquery.Schema, 0, len(columnTypes))
+    for _, col := range columnTypes {
+        if err := validateBigQueryIdentifier(col.Name(), "Source column name"); err != nil {
+            return nil, err
+        }
+
+        bqType := typeMapper(col.DatabaseTypeName(), logger)
+        nullable, ok := col.Nullable()
+
+        field := &bigquery.FieldSchema{
+            Name:     col.Name(),
+            Type:     bqType,
+            Required: ok && !nullable,
+        }
+
+        schema = append(schema, field)
+
+        logger.Debug("Mapped column to BigQuery field",
+            zap.String("database", dbName),
+            zap.String("column_name", col.Name()),
+            zap.String("source_type", col.DatabaseTypeName()),
+            zap.String("bigquery_type", string(bqType)),
+            zap.Bool("required", field.Required),
+        )
+    }
+
+    return schema, nil
 }
 
 // InferSchemaFromMySQL connects to the source DB, runs a LIMIT 1 query,
 // and builds a BigQuery Schema based on the returned column types.
 func InferSchemaFromMySQL(db *sql.DB, dbName string, query string, logger *zap.Logger) (bigquery.Schema, error) {
-	logger.Debug("Inferring schema from MySQL database",
-		zap.String("database", dbName),
-		zap.String("query", query))
+    logger.Debug("Inferring schema from MySQL database",
+        zap.String("database", dbName),
+        zap.String("query", query))
 
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("schema inference query failed: %w", err)
-	}
-	defer rows.Close()
+    schema, err := inferSchema(db, dbName, query, logger, mysqlTypeToBigQueryType)
+    if err != nil {
+        return nil, err
+    }
 
-	columnTypes, err := rows.ColumnTypes()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get column types for inference: %w", err)
-	}
-	logger.Debug("Retrieved column types for schema inference",
-		zap.String("database", dbName),
-		zap.Int("column_count", len(columnTypes)))
+    logger.Info("MySQL schema inference complete",
+        zap.String("database", dbName),
+        zap.Int("fields_mapped", len(schema)))
 
-	schema := make(bigquery.Schema, 0, len(columnTypes))
-	for _, col := range columnTypes {
-		// Validate column name before using it as BigQuery field name
-		if err := validateBigQueryIdentifier(col.Name(), "Source column name"); err != nil {
-			return nil, err
-		}
-
-		bqType := mysqlTypeToBigQueryType(col.DatabaseTypeName(), logger)
-		nullable, ok := col.Nullable()
-		field := &bigquery.FieldSchema{
-			Name:     col.Name(),
-			Type:     bqType,
-			Required: ok && !nullable,
-		}
-		schema = append(schema, field)
-		logger.Debug("Mapped column to BigQuery field",
-			zap.String("database", dbName),
-			zap.String("column_name", col.Name()),
-			zap.String("mysql_type", col.DatabaseTypeName()),
-			zap.String("bigquery_type", string(bqType)),
-			zap.Bool("required", field.Required))
-	}
-
-	logger.Info("MySQL schema inference complete",
-		zap.String("database", dbName),
-		zap.Int("fields_mapped", len(schema)))
-
-	return schema, nil
+    return schema, nil
 }
 
 // InferSchemaFromPostgres connects to the source PostgreSQL DB, runs a LIMIT 1 query,
 // and builds a BigQuery Schema based on the returned column types.
 func InferSchemaFromPostgres(db *sql.DB, dbName string, query string, logger *zap.Logger) (bigquery.Schema, error) {
-	logger.Debug("Inferring schema from PostgreSQL database",
-		zap.String("database", dbName),
-		zap.String("query", query))
+    logger.Debug("Inferring schema from PostgreSQL database",
+        zap.String("database", dbName),
+        zap.String("query", query))
 
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("schema inference query failed: %w", err)
-	}
-	defer rows.Close()
+    schema, err := inferSchema(db, dbName, query, logger, postgresTypeToBigQueryType)
+    if err != nil {
+        return nil, err
+    }
 
-	columnTypes, err := rows.ColumnTypes()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get column types for inference: %w", err)
-	}
-	logger.Debug("Retrieved column types for schema inference",
-		zap.String("database", dbName),
-		zap.Int("column_count", len(columnTypes)))
+    logger.Info("PostgreSQL schema inference complete",
+        zap.String("database", dbName),
+        zap.Int("fields_mapped", len(schema)))
 
-	schema := make(bigquery.Schema, 0, len(columnTypes))
-	for _, col := range columnTypes {
-		// Validate column name before using it as BigQuery field name
-		if err := validateBigQueryIdentifier(col.Name(), "Source column name"); err != nil {
-			return nil, err
-		}
-
-		bqType := postgresTypeToBigQueryType(col.DatabaseTypeName(), logger)
-		nullable, ok := col.Nullable()
-		field := &bigquery.FieldSchema{
-			Name:     col.Name(),
-			Type:     bqType,
-			Required: ok && !nullable,
-		}
-		schema = append(schema, field)
-		logger.Debug("Mapped column to BigQuery field",
-			zap.String("database", dbName),
-			zap.String("column_name", col.Name()),
-			zap.String("postgres_type", col.DatabaseTypeName()),
-			zap.String("bigquery_type", string(bqType)),
-			zap.Bool("required", field.Required))
-	}
-
-	logger.Info("PostgreSQL schema inference complete",
-		zap.String("database", dbName),
-		zap.Int("fields_mapped", len(schema)))
-
-	return schema, nil
+    return schema, nil
 }
 
 // createOrUpdateTable ensures that a target table in BigQuery exists and that its schema matches the provided schema.
