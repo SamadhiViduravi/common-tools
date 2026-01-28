@@ -40,11 +40,8 @@ func (s *service) Generate(data []byte, size int) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data cannot be empty")
 	}
-	if size <= 0 {
-		return nil, fmt.Errorf("invalid size: must be > 0")
-	}
-	if size > 2048 {
-		return nil, fmt.Errorf("invalid size: must be <= 2048")
+	if size <= 0 || size > 2048 {
+		return nil, fmt.Errorf("invalid size: must be between 1 and 2048")
 	}
 
 	// Generate the QR code
