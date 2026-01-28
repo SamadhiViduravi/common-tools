@@ -95,7 +95,7 @@ POST /generate?size={pixels}
 - Raw text or URL to encode
 
 **Response:**
-- PNG image
+- PNG
 
 **Examples:**
 
