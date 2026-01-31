@@ -184,7 +184,7 @@ go mod tidy
 
 ## Project Structure
 
-```
+```text
 .
 ├── cmd/
 │   └── api/
@@ -236,7 +236,7 @@ LOG_ENV=prod LOG_LEVEL=info ./bin/qr-api
 ### Example Log Output
 
 **Debug level (dev format):**
-```
+```text
 2026-01-29T10:00:00Z DEBUG Starting QR generation service initialization
 2026-01-29T10:00:00Z DEBUG Configuration loaded port=8080 read_timeout=5s
 2026-01-29T10:00:01Z INFO Starting server port=8080 addr=:8080

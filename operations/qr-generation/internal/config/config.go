@@ -40,8 +40,10 @@ type Config struct {
 const DefaultSize = 256
 
 var (
-	envCache sync.Map
-	intCache sync.Map
+	envCache     sync.Map
+	intCache     sync.Map
+	durationCache sync.Map
+	int64Cache   sync.Map
 )
 
 // LoadConfig reads configuration from environment variables and returns a Config instance.
@@ -73,10 +75,17 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-// getEnvDuration retrieves a duration environment variable or returns fallback.
+// getEnvDuration retrieves a duration environment variable or returns fallback (only accepts positive values).
 func getEnvDuration(key string, fallback time.Duration) time.Duration {
-	if value, exists := os.LookupEnv(key); exists {
-		if d, err := time.ParseDuration(value); err == nil {
+	if cached, ok := durationCache.Load(key); ok {
+		if val, ok := cached.(time.Duration); ok {
+			return val
+		}
+	}
+
+	if value := os.Getenv(key); value != "" {
+		if d, err := time.ParseDuration(value); err == nil && d > 0 {
+			durationCache.Store(key, d)
 			return d
 		}
 	}
@@ -102,11 +111,16 @@ func getEnvInt(key string, fallback int) int {
 
 // getEnvInt64 retrieves an int64 environment variable or returns fallback (only accepts positive values).
 func getEnvInt64(key string, fallback int64) int64 {
-	if value, exists := os.LookupEnv(key); exists {
-		if i, err := strconv.ParseInt(value, 10, 64); err == nil {
-			if i > 0 {
-				return i
-			}
+	if cached, ok := int64Cache.Load(key); ok {
+		if val, ok := cached.(int64); ok {
+			return val
+		}
+	}
+
+	if value := os.Getenv(key); value != "" {
+		if i, err := strconv.ParseInt(value, 10, 64); err == nil && i > 0 {
+			int64Cache.Store(key, i)
+			return i
 		}
 	}
 	return fallback

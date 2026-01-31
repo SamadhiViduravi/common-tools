@@ -254,13 +254,9 @@ components:
 
 x-cli-usage: |
   # Build
-  make build
-  # Or
   go build -o bin/qr-api cmd/api/main.go
 
   # Run
-  make run
-  # Or
   go run cmd/api/main.go
   # Or
   ./bin/qr-api
@@ -269,11 +265,9 @@ x-cli-usage: |
   PORT=9090 ./bin/qr-api
 
   # Clean build artifacts
-  make clean
+  rm -f bin/qr-api
 
   # Update dependencies
-  make tidy
-  # Or
   go mod tidy
 
 x-api-usage: |
