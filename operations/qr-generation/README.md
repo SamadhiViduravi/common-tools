@@ -24,16 +24,10 @@ cd operations/qr-generation
 go mod tidy
 
 # Build the service
-make build
+go build -o bin/qr-api cmd/api/main.go
 ```
 
 ## Running the Service
-
-### Using Make
-
-```bash
-make run
-```
 
 ### Using Go directly
 
@@ -167,25 +161,25 @@ curl -X POST "http://localhost:8080/generate?size=512" \
 ### Build
 
 ```bash
-make build
+go build -o bin/qr-api cmd/api/main.go
 ```
 
 ### Run tests
 
 ```bash
-make test
+go test ./...
 ```
 
 ### Clean build artifacts
 
 ```bash
-make clean
+rm -f bin/qr-api
 ```
 
 ### Update dependencies
 
 ```bash
-make tidy
+go mod tidy
 ```
 
 ## Project Structure

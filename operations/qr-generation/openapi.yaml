@@ -88,7 +88,7 @@ paths:
           text/plain:
             schema:
               type: string
-              maxLength: 1048576
+              maxLength: 524288
             examples:
               url:
                 summary: Website URL
@@ -206,8 +206,8 @@ components:
         MAX_BODY_SIZE:
           type: integer
           description: Maximum request body size in bytes
-          default: 1048576
-          example: 1048576
+          default: 524288
+          example: 524288
 
     QRCodeFormats:
       type: object
@@ -374,7 +374,7 @@ x-troubleshooting:
   body-too-large: |
     Error: "Request body too large"
     Solution: 
-      - Input data exceeds MAX_BODY_SIZE (1MB default)
+      - Input data exceeds MAX_BODY_SIZE (512KB default)
       - Reduce data size or increase MAX_BODY_SIZE environment variable
       - For large data, consider using URL shorteners or storing data externally
 
@@ -410,7 +410,7 @@ x-security: |
   # Security Considerations
 
   ## Request Size Limiting
-  - Default maximum request body: 1MB
+  - Default maximum request body: 512KB
   - Configurable via MAX_BODY_SIZE environment variable
   - Prevents DoS attacks through large payloads
 

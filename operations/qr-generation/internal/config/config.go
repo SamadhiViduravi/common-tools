@@ -37,6 +37,8 @@ type Config struct {
 	DefaultSize     int
 }
 
+const DefaultSize = 256
+
 var (
 	envCache sync.Map
 	intCache sync.Map
@@ -52,7 +54,7 @@ func LoadConfig() *Config {
 		MaxBodySize:     getEnvInt64("MAX_BODY_SIZE", 524288),
 		MinSize:         getEnvInt("MIN_SIZE", 64),
 		MaxSize:         getEnvInt("MAX_SIZE", 2048),
-		DefaultSize:     256,
+		DefaultSize:     DefaultSize,
 	}
 }
 
